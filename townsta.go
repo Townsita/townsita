@@ -27,7 +27,7 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (t *Townsita) Start(args []string) {
+func (t *Townsita) GetHTTPHandler(args []string) http.Handler {
 
 	t.config = NewConfig()
 	if err := t.config.Load(args); err != nil {
@@ -36,6 +36,8 @@ func (t *Townsita) Start(args []string) {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
+
+	return r
 }
 
 func (t *Townsita) indexHandler(w http.ResponseWriter, r *http.Request) error {
