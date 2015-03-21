@@ -36,13 +36,11 @@ func (t *Townsita) GetHTTPHandler(args []string) http.Handler {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
-
 	return r
 }
 
 func (t *Townsita) indexHandler(w http.ResponseWriter, r *http.Request) error {
 	s := NewSession(t.config)
 	s.AddPath("/", "Home")
-	s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("index.html"))
-	return nil
+	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("index.html"))
 }
