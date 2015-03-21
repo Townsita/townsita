@@ -39,5 +39,8 @@ func (t *Townsta) Start(args []string) {
 }
 
 func (t *Townsta) indexHandler(w http.ResponseWriter, r *http.Request) error {
+	s := NewSession(t.config)
+	s.AddPath("/", "Home")
+	s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("index.html"))
 	return nil
 }

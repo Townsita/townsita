@@ -30,3 +30,7 @@ func (c *Config) Load(args []string) error {
 	}
 	return nil
 }
+
+func (c *Config) templatePath(templateName string) string {
+	return "./templates/" + templateName
+}
