@@ -7,10 +7,10 @@ import (
 
 type Townsita struct {
 	config *Config
-	da     DataAdapter
+	da     *DataAdapter
 }
 
-func New(da DataAdapter) *Townsita {
+func New(da *DataAdapter) *Townsita {
 	return &Townsita{
 		da: da,
 	}
