@@ -1,4 +1,4 @@
-package townsta
+package townsita
 
 import (
 	"html/template"
@@ -26,7 +26,7 @@ func NewSession(c *Config) *Session {
 
 func NewTemplateData(c *Config) TemplateData {
 	td := make(TemplateData)
-	td.Set("Title", "Townsta")
+	td.Set("Title", "Townsita")
 	return td
 }
 

@@ -1,4 +1,4 @@
-package townsta
+package townsita
 
 import (
 	"encoding/json"

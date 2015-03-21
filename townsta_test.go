@@ -1,4 +1,4 @@
-package townsta
+package townsita
 
 import (
 	"testing"
@@ -6,10 +6,10 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestTownsta(t *testing.T) {
-	Convey("Given new Townsta", t, func() {
-		tw := NewTownsta()
-		Convey("Townsta is not nil", func() {
+func TestTownsita(t *testing.T) {
+	Convey("Given new Townsita", t, func() {
+		tw := New()
+		Convey("Townsita is not nil", func() {
 			So(tw, ShouldNotBeNil)
 		})
 	})

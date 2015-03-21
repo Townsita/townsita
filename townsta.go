@@ -1,16 +1,16 @@
-package townsta
+package townsita
 
 import (
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
-type Townsta struct {
+type Townsita struct {
 	config *Config
 }
 
-func NewTownsta() *Townsta {
-	return &Townsta{}
+func New() *Townsita {
+	return &Townsita{}
 }
 
 type appHandler func(http.ResponseWriter, *http.Request) error
@@ -27,7 +27,7 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (t *Townsta) Start(args []string) {
+func (t *Townsita) Start(args []string) {
 
 	t.config = NewConfig()
 	if err := t.config.Load(args); err != nil {
@@ -38,7 +38,7 @@ func (t *Townsta) Start(args []string) {
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
 }
 
-func (t *Townsta) indexHandler(w http.ResponseWriter, r *http.Request) error {
+func (t *Townsita) indexHandler(w http.ResponseWriter, r *http.Request) error {
 	s := NewSession(t.config)
 	s.AddPath("/", "Home")
 	s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("index.html"))

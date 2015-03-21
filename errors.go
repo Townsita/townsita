@@ -1,4 +1,4 @@
-package townsta
+package townsita
 
 type HTTPError struct {
 	Err     error
