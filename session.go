@@ -6,7 +6,7 @@ import (
 )
 
 type PathLink struct {
-	Url   string
+	URL   string
 	Label string
 }
 
@@ -31,7 +31,9 @@ func NewTemplateData(c *Config) TemplateData {
 }
 
 func (s *Session) getHelpers() template.FuncMap {
-	return template.FuncMap{}
+	return template.FuncMap{
+		"slug": slug,
+	}
 }
 
 func (s *Session) render(w http.ResponseWriter, r *http.Request, filenames ...string) error {

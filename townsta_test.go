@@ -8,7 +8,7 @@ import (
 
 func TestTownsita(t *testing.T) {
 	Convey("Given new Townsita", t, func() {
-		tw := New()
+		tw := New(nil)
 		Convey("Townsita is not nil", func() {
 			So(tw, ShouldNotBeNil)
 		})

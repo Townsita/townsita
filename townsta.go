@@ -7,10 +7,13 @@ import (
 
 type Townsita struct {
 	config *Config
+	da     DataAdapter
 }
 
-func New() *Townsita {
-	return &Townsita{}
+func New(da DataAdapter) *Townsita {
+	return &Townsita{
+		da: da,
+	}
 }
 
 type appHandler func(http.ResponseWriter, *http.Request) error
@@ -41,6 +44,7 @@ func (t *Townsita) GetHTTPHandler(args []string) http.Handler {
 
 func (t *Townsita) indexHandler(w http.ResponseWriter, r *http.Request) error {
 	s := NewSession(t.config)
+	s.Set("MessageTypes", t.da.MustGetMessageTypes())
 	s.AddPath("/", "Home")
 	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("index.html"))
 }
