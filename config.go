@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-const defaultConfigFile = "./config/listboard.json"
+const defaultConfigFile = "./config/townsita.json"
 
 type Config struct{}
 
