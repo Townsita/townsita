@@ -39,6 +39,7 @@ func (t *Townsita) GetHTTPHandler(args []string) http.Handler {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
+	r.HandleFunc("/message/new/{id}/{slug}", appHandler(t.newMessageHandler).ServeHTTP).Methods("GET", "POST")
 	return r
 }
 
@@ -47,4 +48,20 @@ func (t *Townsita) indexHandler(w http.ResponseWriter, r *http.Request) error {
 	s.Set("MessageTypes", t.da.MustGetMessageTypes())
 	s.AddPath("/", "Home")
 	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("index.html"))
+}
+
+func (t *Townsita) newMessageHandler(w http.ResponseWriter, r *http.Request) error {
+	vars := mux.Vars(r)
+	if vars["id"] == "" {
+		return HTTPError{
+			nil,
+			"Bad Request.",
+			http.StatusBadRequest,
+		}
+	}
+	s := NewSession(t.config)
+	s.Set("MessageTypes", t.da.MustGetMessageSubTypes(vars["id"]))
+	s.AddPath("/", "Home")
+	s.AddPath("/", "New Message")
+	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("new.html"))
 }
