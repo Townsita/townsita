@@ -42,6 +42,7 @@ func (t *Townsita) GetHTTPHandler(args []string) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
 	r.HandleFunc("/message/new/{id}/{slug}", appHandler(t.newMessageHandler).ServeHTTP).Methods("GET", "POST")
+	r.HandleFunc("/message/view/{id}/{slug}", appHandler(t.veiewMessageHandler).ServeHTTP).Methods("GET")
 	return r
 }
 
@@ -81,6 +82,7 @@ func (t *Townsita) newMessageHandler(w http.ResponseWriter, r *http.Request) err
 	s.Set("MessageTypes", t.da.MustGetMessageSubTypes(vars["id"]))
 	s.Set("Message", message)
 	s.Set("ValidationErrors", ve)
+	s.Set("TypeId", vars["id"])
 	s.AddPath("/", "Home")
 	s.AddPath("/", "New Message")
 	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("new.html"))
@@ -88,5 +90,13 @@ func (t *Townsita) newMessageHandler(w http.ResponseWriter, r *http.Request) err
 
 func (t *Townsita) validateMessage(r *http.Request) (*Message, ValidationErrors) {
 	var ve ValidationErrors
-	return nil, ve
+	var message Message
+	message.TypeID = r.FormValue("type_id")
+	message.Headline = r.FormValue("headline")
+	return &message, ve
+}
+
+func (t *Townsita) veiewMessageHandler(w http.ResponseWriter, r *http.Request) error {
+	s := NewSession(t.config, r)
+	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("view.html"))
 }
