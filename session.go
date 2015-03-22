@@ -12,14 +12,16 @@ type PathLink struct {
 
 type Session struct {
 	td   TemplateData
+	r    *http.Request
 	path []*PathLink
 }
 
 type TemplateData map[string]interface{}
 
-func NewSession(c *Config) *Session {
+func NewSession(c *Config, r *http.Request) *Session {
 	return &Session{
 		td:   NewTemplateData(c),
+		r:    r,
 		path: []*PathLink{},
 	}
 }
@@ -55,4 +57,9 @@ func (s *Session) Set(name string, value interface{}) {
 
 func (s *Session) AddPath(url, label string) {
 	s.path = append(s.path, &PathLink{url, label})
+}
+
+func (s *Session) getUser() *User {
+	// TODO: Do me
+	return &User{"1"}
 }
