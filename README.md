@@ -1,4 +1,4 @@
-## Main Townsita application [![Build Status](https://travis-ci.org/Townsita/townista.svg?branch=master)](https://travis-ci.org/Townsita/townista)
+## Main Townsita application [![Build Status](https://travis-ci.org/Townsita/townsita.svg?branch=master)](https://travis-ci.org/Townsita/townsita)
 
 To get the code use:
 ```bash
