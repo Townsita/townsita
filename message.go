@@ -4,6 +4,12 @@ import (
 	"time"
 )
 
+const (
+	MessageDraft = iota
+	MessagePublished
+	MessageDisabled
+)
+
 type MessageType struct {
 	ID    string
 	Title string
@@ -15,7 +21,7 @@ type Message struct {
 	TypeID string
 
 	Readers    int // Designated readers
-	Seen       int // Number of times seen
+	Completed  int // Number of times seen
 	TargetHash string
 	Latitude   float64
 	Longitude  float64

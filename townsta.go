@@ -42,7 +42,8 @@ func (t *Townsita) GetHTTPHandler(args []string) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
 	r.HandleFunc("/message/new/{id}/{slug}", appHandler(t.newMessageHandler).ServeHTTP).Methods("GET", "POST")
-	r.HandleFunc("/message/view/{id}/{slug}", appHandler(t.veiewMessageHandler).ServeHTTP).Methods("GET")
+	r.HandleFunc("/message/view/{id}/{slug}", appHandler(t.viewMessageHandler).ServeHTTP).Methods("GET")
+	r.HandleFunc("/message/address/{id}/{slug}", appHandler(t.addressMessageHandler).ServeHTTP).Methods("GET")
 	return r
 }
 
@@ -96,7 +97,38 @@ func (t *Townsita) validateMessage(r *http.Request) (*Message, ValidationErrors)
 	return &message, ve
 }
 
-func (t *Townsita) veiewMessageHandler(w http.ResponseWriter, r *http.Request) error {
+func (t *Townsita) viewMessageHandler(w http.ResponseWriter, r *http.Request) error {
 	s := NewSession(t.config, r)
+	vars := mux.Vars(r)
+	if vars["id"] == "" {
+		return HTTPError{
+			nil,
+			"Bad Request.",
+			http.StatusBadRequest,
+		}
+	}
+	message, err := t.da.GetMessageById(vars["id"])
+	if err != nil {
+		return err
+	}
+	s.Set("Message", message)
 	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("view.html"))
+}
+
+func (t *Townsita) addressMessageHandler(w http.ResponseWriter, r *http.Request) error {
+	s := NewSession(t.config, r)
+	vars := mux.Vars(r)
+	if vars["id"] == "" {
+		return HTTPError{
+			nil,
+			"Bad Request.",
+			http.StatusBadRequest,
+		}
+	}
+	message, err := t.da.GetMessageById(vars["id"])
+	if err != nil {
+		return err
+	}
+	s.Set("Message", message)
+	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("address.html"))
 }
