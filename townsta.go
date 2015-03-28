@@ -12,9 +12,10 @@ type Townsita struct {
 
 type ValidationErrors []string
 
-func New(da DataAdapter) *Townsita {
+func New(c *Config, da DataAdapter) *Townsita {
 	return &Townsita{
-		da: da,
+		config: c,
+		da:     da,
 	}
 }
 
@@ -32,12 +33,7 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (t *Townsita) GetHTTPHandler(args []string) http.Handler {
-	t.config = NewConfig()
-	if err := t.config.Load(args); err != nil {
-		panic(err)
-	}
-
+func (t *Townsita) GetHTTPHandler() http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
 	r.HandleFunc("/auth/login", appHandler(t.loginHandler).ServeHTTP).Methods("GET", "POST")
@@ -57,7 +53,7 @@ func (t *Townsita) indexHandler(w http.ResponseWriter, r *http.Request) error {
 func (t *Townsita) newMessageHandler(w http.ResponseWriter, r *http.Request) error {
 	s := NewSession(t.config, r)
 	if !s.Logged() {
-		http.Redirect(w, r, "auth/login", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
 	}
 	vars := mux.Vars(r)
 	if vars["id"] == "" {
