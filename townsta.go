@@ -33,7 +33,6 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *Townsita) GetHTTPHandler(args []string) http.Handler {
-
 	t.config = NewConfig()
 	if err := t.config.Load(args); err != nil {
 		panic(err)
@@ -41,6 +40,7 @@ func (t *Townsita) GetHTTPHandler(args []string) http.Handler {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
+	r.HandleFunc("/auth/login", appHandler(t.loginHandler).ServeHTTP).Methods("GET", "POST")
 	r.HandleFunc("/message/new/{id}/{slug}", appHandler(t.newMessageHandler).ServeHTTP).Methods("GET", "POST")
 	r.HandleFunc("/message/view/{id}/{slug}", appHandler(t.viewMessageHandler).ServeHTTP).Methods("GET")
 	r.HandleFunc("/message/address/{id}/{slug}", appHandler(t.addressMessageHandler).ServeHTTP).Methods("GET")
@@ -55,6 +55,10 @@ func (t *Townsita) indexHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (t *Townsita) newMessageHandler(w http.ResponseWriter, r *http.Request) error {
+	s := NewSession(t.config, r)
+	if !s.Logged() {
+		http.Redirect(w, r, "auth/login", http.StatusTemporaryRedirect)
+	}
 	vars := mux.Vars(r)
 	if vars["id"] == "" {
 		return HTTPError{
@@ -63,7 +67,6 @@ func (t *Townsita) newMessageHandler(w http.ResponseWriter, r *http.Request) err
 			http.StatusBadRequest,
 		}
 	}
-	s := NewSession(t.config, r)
 	var ve ValidationErrors
 	var message *Message
 	// Handle message post
@@ -131,4 +134,32 @@ func (t *Townsita) addressMessageHandler(w http.ResponseWriter, r *http.Request)
 	}
 	s.Set("Message", message)
 	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("address.html"))
+}
+
+func (t *Townsita) loginHandler(w http.ResponseWriter, r *http.Request) error {
+	s := NewSession(t.config, r)
+	if s.Logged() {
+		http.Redirect(w, r, "user/profile", http.StatusTemporaryRedirect)
+	}
+	if r.Method == "POST" {
+		user, ve := t.validateUserLogin(r)
+		if len(ve) == 0 {
+			userID, err := t.da.LoginUser(user)
+			if err != nil {
+				return err
+			}
+			user.ID = userID
+			s.loginUser(user, w)
+			// Redirect to the message page
+			http.Redirect(w, r, "/user/profile", http.StatusFound)
+			return nil
+		}
+	}
+	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("auth/login.html"))
+}
+
+func (t *Townsita) validateUserLogin(r *http.Request) (*User, ValidationErrors) {
+	var ve ValidationErrors
+	user := NewUser()
+	return user, ve
 }
