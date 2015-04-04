@@ -7,5 +7,8 @@ type DataAdapter interface {
 	GetMessageTypeById(id string) *MessageType
 	SaveMessage(message *Message, user *User) (string, error)
 	GetMessageById(id string) (*Message, error)
-	LoginUser(*User) (string, error)
+	LoginUser(user *User) (string, error)
+	LoadUserByID(userID string) (*User, error)
+	GetOwnMessages(userID string, limit, offset int) []*Message
+	GetReceivedMessages(userID string, limit, offset int) []*Message
 }

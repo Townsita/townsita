@@ -37,6 +37,8 @@ func (t *Townsita) GetHTTPHandler() http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
 	r.HandleFunc("/auth/login", appHandler(t.loginHandler).ServeHTTP).Methods("GET", "POST")
+	r.HandleFunc("/user/profile", appHandler(t.myProfileHandler).ServeHTTP).Methods("GET")
+	r.HandleFunc("/user/profile/{id}/{slug}", appHandler(t.userProfileHandler).ServeHTTP).Methods("GET")
 	r.HandleFunc("/message/new/{id}/{slug}", appHandler(t.newMessageHandler).ServeHTTP).Methods("GET", "POST")
 	r.HandleFunc("/message/view/{id}/{slug}", appHandler(t.viewMessageHandler).ServeHTTP).Methods("GET")
 	r.HandleFunc("/message/address/{id}/{slug}", appHandler(t.addressMessageHandler).ServeHTTP).Methods("GET")
@@ -158,4 +160,39 @@ func (t *Townsita) validateUserLogin(r *http.Request) (*User, ValidationErrors) 
 	var ve ValidationErrors
 	user := NewUser()
 	return user, ve
+}
+
+func (t *Townsita) myProfileHandler(w http.ResponseWriter, r *http.Request) error {
+	s := NewSession(t.config, r)
+	if !s.Logged() {
+		http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
+	}
+	user, err := t.da.LoadUserByID(s.userId)
+	if err != nil {
+		return err
+	}
+	s.Set("User", user)
+	s.Set("OwnMessages", t.da.GetOwnMessages(user.ID, 10, 0))
+	s.Set("ReceivedMessages", t.da.GetReceivedMessages(user.ID, 10, 0))
+	s.AddPath("/", "Home")
+	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("user/my_profile.html"))
+}
+
+func (t *Townsita) userProfileHandler(w http.ResponseWriter, r *http.Request) error {
+	s := NewSession(t.config, r)
+	vars := mux.Vars(r)
+	if vars["id"] == "" {
+		return HTTPError{
+			nil,
+			"Bad Request.",
+			http.StatusBadRequest,
+		}
+	}
+	user, err := t.da.LoadUserByID(vars["id"])
+	if err != nil {
+		return err
+	}
+	s.Set("User", user)
+	s.AddPath("/", "Home")
+	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("user/user_profile.html"))
 }
