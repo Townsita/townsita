@@ -79,8 +79,14 @@ func (s *Session) getUser() *User {
 	return &User{"1"}
 }
 
-func (s *Session) loginUser(user *User, w http.ResponseWriter) {
+func (s *Session) logInUser(user *User, w http.ResponseWriter) {
 	session, _ := s.store.Get(s.r, sessionName)
 	session.Values["userId"] = user.ID
+	session.Save(s.r, w)
+}
+
+func (s *Session) logOutUser(w http.ResponseWriter) {
+	session, _ := s.store.Get(s.r, sessionName)
+	delete(session.Values, "userId")
 	session.Save(s.r, w)
 }

@@ -36,8 +36,10 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (t *Townsita) GetHTTPHandler() http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/", appHandler(t.indexHandler).ServeHTTP).Methods("GET")
-	r.HandleFunc("/auth/login", appHandler(t.loginHandler).ServeHTTP).Methods("GET", "POST")
-	r.HandleFunc("/user/profile", appHandler(t.myProfileHandler).ServeHTTP).Methods("GET")
+	r.HandleFunc("/auth/login.html", appHandler(t.logInHandler).ServeHTTP).Methods("GET", "POST")
+	r.HandleFunc("/auth/register.html", appHandler(t.registerHandler).ServeHTTP).Methods("GET", "POST")
+	r.HandleFunc("/auth/logout.html", appHandler(t.logOutHandler).ServeHTTP).Methods("GET", "POST")
+	r.HandleFunc("/user/profile.html", appHandler(t.myProfileHandler).ServeHTTP).Methods("GET")
 	r.HandleFunc("/user/profile/{id}/{slug}", appHandler(t.userProfileHandler).ServeHTTP).Methods("GET")
 	r.HandleFunc("/message/new/{id}/{slug}", appHandler(t.newMessageHandler).ServeHTTP).Methods("GET", "POST")
 	r.HandleFunc("/message/view/{id}/{slug}", appHandler(t.viewMessageHandler).ServeHTTP).Methods("GET")
@@ -55,7 +57,7 @@ func (t *Townsita) indexHandler(w http.ResponseWriter, r *http.Request) error {
 func (t *Townsita) newMessageHandler(w http.ResponseWriter, r *http.Request) error {
 	s := NewSession(t.config, r)
 	if !s.Logged() {
-		http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/auth/login.html", http.StatusTemporaryRedirect)
 	}
 	vars := mux.Vars(r)
 	if vars["id"] == "" {
@@ -134,10 +136,10 @@ func (t *Townsita) addressMessageHandler(w http.ResponseWriter, r *http.Request)
 	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("address.html"))
 }
 
-func (t *Townsita) loginHandler(w http.ResponseWriter, r *http.Request) error {
+func (t *Townsita) logInHandler(w http.ResponseWriter, r *http.Request) error {
 	s := NewSession(t.config, r)
 	if s.Logged() {
-		http.Redirect(w, r, "user/profile", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/user/profile.html", http.StatusTemporaryRedirect)
 	}
 	if r.Method == "POST" {
 		user, ve := t.validateUserLogin(r)
@@ -147,13 +149,42 @@ func (t *Townsita) loginHandler(w http.ResponseWriter, r *http.Request) error {
 				return err
 			}
 			user.ID = userID
-			s.loginUser(user, w)
+			s.logInUser(user, w)
 			// Redirect to the message page
-			http.Redirect(w, r, "/user/profile", http.StatusFound)
+			http.Redirect(w, r, "/user/profile.html", http.StatusFound)
 			return nil
 		}
 	}
 	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("auth/login.html"))
+}
+
+func (t *Townsita) registerHandler(w http.ResponseWriter, r *http.Request) error {
+	s := NewSession(t.config, r)
+	if s.Logged() {
+		http.Redirect(w, r, "/user/profile.html", http.StatusTemporaryRedirect)
+	}
+	if r.Method == "POST" {
+		user, ve := t.validateUserRegister(r)
+		if len(ve) == 0 {
+			userID, err := t.da.RegisterUser(user)
+			if err != nil {
+				return err
+			}
+			user.ID = userID
+			s.logInUser(user, w)
+			// Redirect to the message page
+			http.Redirect(w, r, "/user/profile.html", http.StatusFound)
+			return nil
+		}
+	}
+	return s.render(w, r, t.config.templatePath("layout.html"), t.config.templatePath("auth/register.html"))
+}
+
+func (t *Townsita) logOutHandler(w http.ResponseWriter, r *http.Request) error {
+	s := NewSession(t.config, r)
+	s.logOutUser(w)
+	http.Redirect(w, r, "/", http.StatusFound)
+	return nil
 }
 
 func (t *Townsita) validateUserLogin(r *http.Request) (*User, ValidationErrors) {
@@ -162,10 +193,16 @@ func (t *Townsita) validateUserLogin(r *http.Request) (*User, ValidationErrors) 
 	return user, ve
 }
 
+func (t *Townsita) validateUserRegister(r *http.Request) (*User, ValidationErrors) {
+	var ve ValidationErrors
+	user := NewUser()
+	return user, ve
+}
+
 func (t *Townsita) myProfileHandler(w http.ResponseWriter, r *http.Request) error {
 	s := NewSession(t.config, r)
 	if !s.Logged() {
-		http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/auth/login.html", http.StatusTemporaryRedirect)
 	}
 	user, err := t.da.LoadUserByID(s.userId)
 	if err != nil {
